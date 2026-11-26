@@ -6,5 +6,10 @@ service cloud.firestore {
    allow get, delete: if owner();
    allow create, update: if owner() && request.resource.data.keys().hasAll(['displayName','level']) && request.resource.data.keys().hasOnly(['displayName','level']) && request.resource.data.displayName is string && request.resource.data.displayName.size() > 0 && request.resource.data.displayName.size() <= 50 && request.resource.data.level in ['beginner','player','advanced','master'];
   }
+  match /trainingRatings/{uid}/modes/{mode} {
+   function owner() { return request.auth != null && request.auth.uid == uid && request.auth.token.firebase.sign_in_provider != 'anonymous' && mode in ['rapid','blitz','untimed']; }
+   allow get, delete: if owner();
+   allow create, update: if owner() && request.resource.data.keys().hasAll(['elo','games']) && request.resource.data.keys().hasOnly(['elo','games']) && request.resource.data.elo is int && request.resource.data.elo >= 100 && request.resource.data.games is int && request.resource.data.games >= 0;
+  }
  }
 }
