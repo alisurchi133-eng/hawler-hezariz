@@ -1,0 +1,22 @@
+{
+  "championVoice": {
+    "$room": {
+      "presence": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && root.child('championRooms').child($room).child('members').child(auth.uid).exists()",
+        "$uid": {
+          ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $uid && (!newData.exists() || root.child('championRooms').child($room).child('members').child(auth.uid).exists())",
+          ".validate": "newData.hasChildren(['session']) && newData.child('session').isString() && newData.child('session').val().length <= 80"
+        }
+      },
+      "signals": {
+        "$to": {
+          ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $to && root.child('championRooms').child($room).child('members').child(auth.uid).exists()",
+          "$key": {
+            ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && ((!newData.exists() && auth.uid === $to) || (!data.exists() && root.child('championRooms').child($room).child('members').child(auth.uid).exists() && root.child('championRooms').child($room).child('members').child($to).exists() && newData.child('from').val() === auth.uid))",
+            ".validate": "newData.hasChildren(['from','session','data']) && newData.child('session').isString() && newData.child('session').val().length <= 80 && newData.child('data').isString() && newData.child('data').val().length <= 20000"
+          }
+        }
+      }
+    }
+  }
+}
