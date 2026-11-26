@@ -1,0 +1,1 @@
+const en=localStorage.getItem('shabandLang')==='en';document.documentElement.lang=en?'en':'ckb';document.documentElement.dir=en?'ltr':'rtl';document.querySelector('nav')?.setAttribute('dir','ltr');if(en)document.querySelectorAll('[data-en]').forEach(e=>e.textContent=e.dataset.en);if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(console.warn);
