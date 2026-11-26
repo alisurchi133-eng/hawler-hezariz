@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  match /profiles/{uid} {
+   function owner() { return request.auth != null && request.auth.uid == uid && request.auth.token.firebase.sign_in_provider != 'anonymous'; }
+   allow get, delete: if owner();
+   allow create, update: if owner() && request.resource.data.keys().hasAll(['displayName','level']) && request.resource.data.keys().hasOnly(['displayName','level']) && request.resource.data.displayName is string && request.resource.data.displayName.size() > 0 && request.resource.data.displayName.size() <= 50 && request.resource.data.level in ['beginner','player','advanced','master'];
+  }
+ }
+}
