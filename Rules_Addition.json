@@ -1,0 +1,27 @@
+{
+  "championRooms": {
+    ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous'",
+    "$room": {
+      ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && $room.matches(/^[a-f0-9]{32}$/) && ((!data.exists() && newData.child('host').val() === auth.uid && newData.child('white').val() === auth.uid) || (data.child('host').val() === auth.uid && (!newData.exists() || newData.child('host').val() === auth.uid)))",
+      ".validate": "newData.hasChildren(['host','visibility','white','black','base','inc','seq','members','state']) && newData.child('visibility').val() === 'public' && newData.child('members').child(newData.child('white').val()).exists() && newData.child('state/pgn').isString() && newData.child('state/pgn').val().length <= 100000"
+    }
+  },
+  "championRequests": {
+    "$room": {
+      ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && root.child('championRooms').child($room).child('host').val() === auth.uid",
+      "$request": {
+        ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && ((!data.exists() && newData.exists() && root.child('championRooms').child($room).exists() && newData.child('uid').val() === auth.uid) || (!newData.exists() && root.child('championRooms').child($room).child('host').val() === auth.uid))",
+        ".validate": "newData.hasChildren(['uid','name','action']) && newData.child('name').isString() && newData.child('name').val().length <= 50 && (newData.child('action').val() === 'join' || newData.child('action').val() === 'leave' || newData.child('action').val() === 'move' || newData.child('action').val() === 'resign')"
+      }
+    }
+  },
+  "championChat": {
+    "$room": {
+      ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && root.child('championRooms').child($room).child('members').child(auth.uid).exists()",
+      "$message": {
+        ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && root.child('championRooms').child($room).child('members').child(auth.uid).exists() && !data.exists() && newData.child('uid').val() === auth.uid",
+        ".validate": "newData.hasChildren(['uid','name','text']) && newData.child('name').isString() && newData.child('name').val().length <= 50 && newData.child('text').isString() && newData.child('text').val().length <= 500"
+      }
+    }
+  }
+}
