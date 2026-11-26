@@ -202,6 +202,31 @@
           }
         }
       }
+    },
+    "friendPresence": {
+      "$uid": {
+        ".read": "auth != null && auth.token.email_verified === true && auth.token.firebase.sign_in_provider !== 'anonymous' && (auth.uid === $uid || (root.child('friendPairs').child(auth.uid).child($uid).child('status').val() === 'accepted' || root.child('friendPairs').child($uid).child(auth.uid).child('status').val() === 'accepted'))",
+        ".write": "auth != null && auth.token.email_verified === true && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $uid",
+        ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 10000"
+      }
+    },
+    "friendInvites": {
+      "$to": {
+        ".read": "auth != null && auth.token.email_verified === true && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $to",
+        "$from": {
+          ".write": "auth != null && auth.token.email_verified === true && auth.token.firebase.sign_in_provider !== 'anonymous' && ((!newData.exists() && (auth.uid === $to || auth.uid === $from)) || (auth.uid === $from && $to !== $from && (root.child('friendPairs').child($from).child($to).child('status').val() === 'accepted' || root.child('friendPairs').child($to).child($from).child('status').val() === 'accepted') && root.child('timedRooms').child(newData.child('room').val()).child('white').val() === auth.uid && !root.child('timedRooms').child(newData.child('room').val()).child('black').exists()))",
+          ".validate": "newData.hasChildren(['room','at'])",
+          "room": {
+            ".validate": "newData.isString() && newData.val().matches(/^[a-f0-9]{32}$/)"
+          },
+          "at": {
+            ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 10000"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
     }
   }
 }
