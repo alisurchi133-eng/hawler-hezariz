@@ -1,0 +1,207 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "profile": {
+          ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous' && newData.exists()",
+          ".validate": "newData.hasChildren(['displayName', 'level'])",
+          "displayName": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
+          },
+          "level": {
+            ".validate": "newData.val() === 'beginner' || newData.val() === 'player' || newData.val() === 'advanced' || newData.val() === 'master'"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "ratings": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
+    "gameHistory": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
+    "leaderboard": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "rooms": {
+      "$room": {
+        ".read": "auth != null && (data.child('white').val() === auth.uid || data.child('black').val() === auth.uid)",
+        ".write": "auth != null && !data.exists() && $room.matches(/^[a-f0-9]{32}$/) && newData.child('white').val() === auth.uid && !newData.child('black').exists() && newData.child('state/ply').val() === 0 && newData.child('state/pgn').val() === ''",
+        "white": {
+          ".validate": "newData.isString()"
+        },
+        "black": {
+          ".read": "auth != null && data.parent().child('white').exists()",
+          ".write": "auth != null && data.parent().child('white').exists() && data.parent().child('white').val() !== auth.uid && !data.exists() && newData.val() === auth.uid"
+        },
+        "state": {
+          ".write": "auth != null && data.parent().child('black').exists() && newData.child('ply').val() === data.child('ply').val() + 1 && ((data.child('ply').val() % 2 === 0 && data.parent().child('white').val() === auth.uid) || (data.child('ply').val() % 2 === 1 && data.parent().child('black').val() === auth.uid))",
+          ".validate": "newData.hasChildren(['pgn', 'ply']) && newData.child('pgn').isString() && newData.child('ply').isNumber()"
+        },
+        "chat": {
+          "$message": {
+            ".write": "auth != null && !data.exists() && (data.parent().parent().child('white').val() === auth.uid || data.parent().parent().child('black').val() === auth.uid) && newData.child('uid').val() === auth.uid",
+            ".validate": "newData.hasChildren(['uid', 'text']) && newData.child('text').isString() && newData.child('text').val().length <= 500"
+          }
+        },
+        "voice": {
+          "w": {
+            ".write": "auth != null && data.parent().parent().child('white').val() === auth.uid"
+          },
+          "b": {
+            ".write": "auth != null && data.parent().parent().child('black').val() === auth.uid"
+          }
+        }
+      }
+    },
+    "timedRooms": {
+      "$room": {
+        ".read": "auth != null && (data.child('white').val() === auth.uid || data.child('black').val() === auth.uid)",
+        ".write": "auth != null && !data.exists() && $room.matches(/^[a-f0-9]{32}$/) && newData.child('white').val() === auth.uid && !newData.child('black').exists() && newData.child('state/ply').val() === 0 && newData.child('state/pgn').val() === '' && newData.child('state/started').val() === false && newData.child('state/result').val() === '' && newData.child('state/w').val() === newData.child('base').val() && newData.child('state/b').val() === newData.child('base').val() && ((newData.child('base').val() === 600000 && newData.child('inc').val() === 0) || (newData.child('base').val() === 180000 && newData.child('inc').val() === 2000) || (newData.child('base').val() === 300000 && newData.child('inc').val() === 3000))",
+        "black": {
+          ".read": "auth != null && data.parent().child('white').exists()",
+          ".write": "auth != null && data.parent().child('white').exists() && data.parent().child('white').val() !== auth.uid && !data.exists() && newData.val() === auth.uid"
+        },
+        "bName": {
+          ".write": "auth != null && data.parent().child('black').val() === auth.uid && newData.exists()",
+          ".validate": "newData.isString() && newData.val().length <= 50"
+        },
+        "wName": {
+          ".validate": "newData.isString() && newData.val().length <= 50"
+        },
+        "state": {
+          ".write": "auth != null && (data.parent().child('white').val() === auth.uid || data.parent().child('black').val() === auth.uid) && data.parent().child('black').exists() && data.child('result').val() === '' && newData.exists() && ((data.child('started').val() === false && newData.child('started').val() === true && newData.child('ply').val() === 0 && newData.child('at').val() <= now && newData.child('at').val() >= now - 10000) || (data.child('started').val() === true && newData.child('started').val() === true && ((newData.child('ply').val() === data.child('ply').val() + 1 && ((data.child('ply').val() % 2 === 0 && data.parent().child('white').val() === auth.uid) || (data.child('ply').val() % 2 === 1 && data.parent().child('black').val() === auth.uid)) && newData.child('at').val() <= now && newData.child('at').val() >= now - 10000) || (newData.child('ply').val() === data.child('ply').val() && newData.child('pgn').val() === data.child('pgn').val() && newData.child('w').val() === data.child('w').val() && newData.child('b').val() === data.child('b').val() && newData.child('at').val() === data.child('at').val()))))",
+          ".validate": "newData.hasChildren(['pgn', 'ply', 'w', 'b', 'at', 'started', 'result', 'offer']) && newData.child('pgn').isString() && newData.child('pgn').val().length <= 100000 && newData.child('ply').isNumber() && newData.child('w').isNumber() && newData.child('w').val() >= 0 && newData.child('b').isNumber() && newData.child('b').val() >= 0 && newData.child('at').isNumber() && newData.child('started').isBoolean() && newData.child('result').isString() && newData.child('result').val().length <= 80 && newData.child('offer').isString()"
+        },
+        "chat": {
+          "$message": {
+            ".write": "auth != null && !data.exists() && (data.parent().parent().child('white').val() === auth.uid || data.parent().parent().child('black').val() === auth.uid) && newData.child('uid').val() === auth.uid",
+            ".validate": "newData.hasChildren(['uid', 'text']) && newData.child('text').isString() && newData.child('text').val().length <= 500"
+          }
+        },
+        "voice": {
+          "w": {
+            ".write": "auth != null && data.parent().parent().child('white').val() === auth.uid"
+          },
+          "b": {
+            ".write": "auth != null && data.parent().parent().child('black').val() === auth.uid"
+          }
+        }
+      }
+    },
+    "matchmaking": {
+      "$time": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous'",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && ($time === '10+0' || $time === '3+2' || $time === '5+3') && ((!newData.exists() && data.child('uid').val() === auth.uid && !data.child('claim').exists()) || (newData.exists() && ((!data.exists() || data.child('expires').val() <= now) && newData.child('uid').val() === auth.uid && !newData.child('claim').exists() && newData.child('expires').val() > now && newData.child('expires').val() <= now + 70000 && root.child('timedRooms').child(newData.child('room').val()).child('white').val() === auth.uid || (data.child('expires').val() > now && !data.child('claim').exists() && data.child('uid').val() !== auth.uid && newData.child('claim').val() === auth.uid && newData.child('uid').val() === data.child('uid').val() && newData.child('room').val() === data.child('room').val() && newData.child('expires').val() === data.child('expires').val()))))",
+        ".validate": "newData.hasChildren(['uid','room','expires'])",
+        "uid": {
+          ".validate": "newData.isString()"
+        },
+        "room": {
+          ".validate": "newData.isString() && newData.val().matches(/^[a-f0-9]{32}$/)"
+        },
+        "expires": {
+          ".validate": "newData.isNumber()"
+        },
+        "claim": {
+          ".validate": "newData.isString()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "championRooms": {
+      ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous'",
+      "$room": {
+        ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && $room.matches(/^[a-f0-9]{32}$/) && ((!data.exists() && newData.child('host').val() === auth.uid && newData.child('white').val() === auth.uid) || (data.child('host').val() === auth.uid && (!newData.exists() || newData.child('host').val() === auth.uid)))",
+        ".validate": "newData.hasChildren(['host','visibility','white','black','base','inc','seq','members','state']) && newData.child('visibility').val() === 'public' && newData.child('members').child(newData.child('white').val()).exists() && newData.child('state/pgn').isString() && newData.child('state/pgn').val().length <= 100000"
+      }
+    },
+    "championRequests": {
+      "$room": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && root.child('championRooms').child($room).child('host').val() === auth.uid",
+        "$request": {
+          ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && ((!data.exists() && newData.exists() && root.child('championRooms').child($room).exists() && newData.child('uid').val() === auth.uid) || (!newData.exists() && root.child('championRooms').child($room).child('host').val() === auth.uid))",
+          ".validate": "newData.hasChildren(['uid','name','action']) && newData.child('name').isString() && newData.child('name').val().length <= 50 && (newData.child('action').val() === 'join' || newData.child('action').val() === 'leave' || newData.child('action').val() === 'move' || newData.child('action').val() === 'resign')"
+        }
+      }
+    },
+    "championChat": {
+      "$room": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && root.child('championRooms').child($room).child('members').child(auth.uid).exists()",
+        "$message": {
+          ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && root.child('championRooms').child($room).child('members').child(auth.uid).exists() && !data.exists() && newData.child('uid').val() === auth.uid",
+          ".validate": "newData.hasChildren(['uid','name','text']) && newData.child('name').isString() && newData.child('name').val().length <= 50 && newData.child('text').isString() && newData.child('text').val().length <= 500"
+        }
+      }
+    },
+    "championVoice": {
+      "$room": {
+        "presence": {
+          ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && root.child('championRooms').child($room).child('members').child(auth.uid).exists()",
+          "$uid": {
+            ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $uid && (!newData.exists() || root.child('championRooms').child($room).child('members').child(auth.uid).exists())",
+            ".validate": "newData.hasChildren(['session']) && newData.child('session').isString() && newData.child('session').val().length <= 80"
+          }
+        },
+        "signals": {
+          "$to": {
+            ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $to && root.child('championRooms').child($room).child('members').child(auth.uid).exists()",
+            "$key": {
+              ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && ((!newData.exists() && auth.uid === $to) || (!data.exists() && root.child('championRooms').child($room).child('members').child(auth.uid).exists() && root.child('championRooms').child($room).child('members').child($to).exists() && newData.child('from').val() === auth.uid))",
+              ".validate": "newData.hasChildren(['from','session','data']) && newData.child('session').isString() && newData.child('session').val().length <= 80 && newData.child('data').isString() && newData.child('data').val().length <= 20000"
+            }
+          }
+        }
+      }
+    },
+    "publicPlayers": {
+      ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.token.email_verified === true",
+      ".indexOn": [
+        "name"
+      ],
+      "$uid": {
+        ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $uid && auth.token.email_verified === true",
+        ".validate": "newData.hasChildren(['name'])",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "friendPairs": {
+      "$a": {
+        "$b": {
+          ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.token.email_verified === true && (auth.uid === $a || auth.uid === $b)",
+          ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.token.email_verified === true && (auth.uid === $a || auth.uid === $b) && $a !== $b && ((!newData.exists()) || (!data.exists() && newData.child('sender').val() === auth.uid && newData.child('status').val() === 'pending' && root.child('publicPlayers').child($a).exists() && root.child('publicPlayers').child($b).exists()) || (data.child('status').val() === 'pending' && data.child('sender').val() !== auth.uid && newData.child('sender').val() === data.child('sender').val() && newData.child('status').val() === 'accepted'))",
+          ".validate": "newData.hasChildren(['sender','status'])",
+          "sender": {
+            ".validate": "newData.val() === $a || newData.val() === $b"
+          },
+          "status": {
+            ".validate": "newData.val() === 'pending' || newData.val() === 'accepted'"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    }
+  }
+}
